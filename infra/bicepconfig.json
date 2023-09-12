@@ -1,0 +1,10 @@
+{
+    "moduleAliases": {
+      "ts": {},
+      "br": {
+        "repo": {
+          "registry": "[CHANGETHIS].azurecr.io"
+        }
+      }
+    }
+  }

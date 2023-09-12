@@ -1,0 +1,71 @@
+trigger:
+    - master
+pr:
+    - master
+
+pool:
+    vmImage: ubuntu-22.04
+
+resources:
+  repositories:
+  - repository: CompanyYamlTemplates
+    type: git
+    name: YAML/Company.Shared.Yaml
+    ref: main
+
+stages:
+    - stage: Build
+      jobs:
+          - template: "Build/build-infra.yaml@CompanyYamlTemplates"
+            parameters:
+                artifactName: 'infrastructure'
+
+          - template: "Build/build-app.yaml@CompanyYamlTemplates"
+            parameters:
+                targetproject: '**/Company.Product.Api.sln'
+                artifactName: 'app'
+                targetFramework: net6.0
+
+    - stage: Test
+      dependsOn: [ Build ]
+      jobs:
+          - template: "Deploy/deployment-infra.yaml@CompanyYamlTemplates"
+            parameters:
+                environmentName: 'test'
+                artifactName: 'infrastructure'
+                azureServiceConnectionName: 'AzurePlayground'
+                infraParameterFilePath: 'parameters/test.parameters.json'
+                jobName: 'Deploy_Infra_Test'                
+
+          - template: "Deploy/deployment-app.yaml@CompanyYamlTemplates"
+            parameters:
+                environmentName: 'test'
+                artifactName: 'app'
+                azureServiceConnectionName: 'AzurePlayground'
+                appServiceName: 'app-productA-test'
+                appServiceStartupCommand: 'dotnet Company.Product.Api.dll'
+                jobName: 'Deploy_App_Test'
+                appType: 'webAppLinux'
+                dependsOn: [ Deploy_Infra_Test ]
+
+    - stage: Prod
+      dependsOn: [ Test ]
+      jobs:
+          - template: "Deploy/deployment-infra.yaml@CompanyYamlTemplates"
+            parameters:
+                environmentName: 'prod'
+                artifactName: 'infrastructure'
+                azureServiceConnectionName: 'AzurePlayground'
+                infraParameterFilePath: 'parameters/prod.parameters.json'
+                jobName: 'Deploy_Infra_Prod'                
+
+          - template: "Deploy/deployment-app.yaml@CompanyYamlTemplates"
+            parameters:
+                environmentName: 'prod'
+                artifactName: 'app'
+                azureServiceConnectionName: 'AzurePlayground'
+                appServiceName: 'app-productA-prod'
+                appServiceStartupCommand: 'dotnet Company.Product.Api.dll'
+                jobName: 'Deploy_App_Prod'
+                appType: 'webAppLinux'
+                dependsOn: [ Deploy_Infra_Prod ]

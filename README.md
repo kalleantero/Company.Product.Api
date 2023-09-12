@@ -1,2 +1,1 @@
-# Company.Product.Api
-Sample API
+# Company Product project
