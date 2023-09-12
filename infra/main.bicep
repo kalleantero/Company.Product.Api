@@ -13,7 +13,7 @@ module resourceGroupModule 'br/repo:bicep/modules/resourcegroup/resourcegroup.bi
   params: {
     resourceGroupName: resourceGroupName
     location: location
-    tags: tags
+    tags: union(tags, { 'azd-env-name': environment })
   }
 }
 
@@ -79,7 +79,7 @@ module apiAppServiceModule 'br/repo:bicep/modules/appservice/appservice.bicep:v0
     environment: environment
     location: location
     serverFarmId: appservicePlanModule.outputs.serverFarmId
-    tags: tags
+    tags: union(tags, { 'azd-service-name': 'api' })
     productName: productName
     startUpCommand: 'dotnet Company.Product.Api.dll'
   }
